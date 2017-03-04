@@ -84,7 +84,7 @@ func GetSessionById(id string) (s Session, err error) {
 
 func GetUsernamesForSession(sessionId string) (userIds []string, err error) {
 	session, err := GetSessionById(sessionId)
-	if err == nil {
+	if err != nil {
 		return userIds, err
 	}
 
