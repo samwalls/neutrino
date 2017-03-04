@@ -71,14 +71,5 @@ func GetUsernamesForSession(sessionId string) (userIds []string, err error) {
 	return ids, nil
 }
 
-// When a file is changed by a user
-func FileChanged(sessionId string, username string, updatedFileContents string, newCursorPosition CursorPos) {
-	_, err := GetSessionById(sessionId)
-	if err == nil {
-		return
-	}
-
-}
-
 func main() {
 }
