@@ -2,6 +2,7 @@ package handle
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
@@ -68,7 +69,6 @@ func (handler *Handler) Serve(root string, port uint) error {
 		"location": "localhost",
 		"port":     port,
 	}).Info()
-	http.Handle(root, handler.server)
-
+	http.Handle(fmt.Sprintf("%v:%v", root, port), handler.server)
 	return nil
 }
