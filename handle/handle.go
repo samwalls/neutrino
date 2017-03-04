@@ -24,11 +24,12 @@ type updateContent struct {
 	files map[string][]byte
 }
 
-func (handler *Handler) deregister(so socketio.Socket) {
+func (handler *Handler) deregister(so socketio.Socket) string {
 	//TODO
+	return ""
 }
 
-func (handler *Handler) register(msg string, so socketio.Socket) {
+func (handler *Handler) register(so socketio.Socket, msg string) string {
 	handler.logger.Info("register fired")
 	content := registerContent{}
 	err := json.Unmarshal([]byte(msg), &content)
@@ -46,30 +47,43 @@ func (handler *Handler) register(msg string, so socketio.Socket) {
 		handler.logger.Fatal(err)
 	}
 	handler.logger.Info(response)
-	so.Emit("update", response)
+	return string(response)
+}
+
+func (handler *Handler) disconnection(so socketio.Socket) {
+	// Handle disconnection
 }
 
 func (handler *Handler) connection(so socketio.Socket) {
 	handler.logger.Info("connection established")
-	so.On("register", handler.register)
-	so.On("deregister", handler.deregister)
+	handler.logger.Infof("Socket: %v", so)
+	handler.logger.Infof("Connected clients: %v", handler.server.Count())
+	so.On("register", func(msg string) string {
+		so.Emit("polo", "HellO!")
+		handler.logger.Info("register fired!!!")
+	 	return handler.register(so, msg) 
+	})
+	so.On("deregister", func() string { return handler.deregister(so) })
+	so.On("disconnection", handler.disconnection)
 }
 
 // NewHandler creates a new Handler struct
 func NewHandler(logger *logrus.Logger) (Handler, error) {
-	handler := Handler{}
 	server, err := socketio.NewServer(nil)
+	handler := Handler{
+		server: server,
+		logger: logger,
+	}
 	if err != nil {
 		return handler, err
 	}
-	server.On("connection", handler.connection)
-	server.On("error", func(so socketio.Socket, err error) {
-		handler.logger.Fatal(err)
+	server.On("connection", func (so socketio.Socket) {
+		handler.connection(so)
 	})
-	return Handler{
-		server: server,
-		logger: logger,
-	}, nil
+	server.On("error", func(so socketio.Socket, err error) {
+		handler.logger.Fatalf("error: %v", err)
+	})
+	return handler, nil
 }
 
 // Serve starts handling requests
