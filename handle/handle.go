@@ -73,7 +73,6 @@ func (handler *Handler) Serve(port string) {
 		"location": "localhost",
 		"port":     port,
 	}).Info("server started")
-	serveMux := http.NewServeMux()
-	serveMux.Handle("/socket.io/", handler.server)
-	handler.logger.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), serveMux))
+	http.Handle("/socket.io/", handler.server)
+	handler.logger.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
