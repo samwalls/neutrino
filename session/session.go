@@ -1,11 +1,12 @@
 // Current sessions and users
 
-package main
+package session
 
 import (
     "math/rand"
     "errors"
     "golang.org/x/crypto/bcrypt"
+    "fmt"
 )
 
 type Session struct {
@@ -58,7 +59,7 @@ func ValidPassword(sessionId string, plainPassword string) bool {
 }
 
 // Creates a new session
-func NewSession(createrUsername string, fileName string, initialFileData string, plainPassword string) Session  {
+func NewSession(createrUsername string, fileName string, plainPassword string) Session  {
 	cUser := User{username: createrUsername}
 	hashedPassword, _ := bcrypt.GenerateFromPassword(toByteArray(plainPassword), 5) 
 	if len(plainPassword) == 0 {
@@ -72,15 +73,37 @@ func NewSession(createrUsername string, fileName string, initialFileData string,
 	return session
 }
 
+func AddUserToSession(sessionId string, username string) (u User, e error) {
+	user := User{username: username}
+	session, err := GetSessionById(sessionId)
+	if err != nil {
+		return u, errors.New("Failed to find session with id")
+	}
+
+	session.users = append(session.users, user)
+	setSessionAtId(sessionId, session)
+	return user, nil
+}
+
+func setSessionAtId(sessionId string, session Session) {
+	for idx, sess := range sessions {
+		if sess.id == sessionId {
+			sessions[idx] = session
+			fmt.Println("Updated session")
+			return 
+		}
+	}
+}
+
 func GetSessionById(id string) (s Session, err error) {
 	for _, session := range sessions {
 		if session.id == id {
 			return session, nil
-		}
-	}
+		} 
+	}   
 
 	return s, errors.New("No session with id found")
-}
+} 
 
 func GetUsernamesForSession(sessionId string) (userIds []string, err error) {
 	session, err := GetSessionById(sessionId)
@@ -89,14 +112,11 @@ func GetUsernamesForSession(sessionId string) (userIds []string, err error) {
 	}
 
 	users := session.users
-	ids := make([]string, 0)
-
+	ids := make([]string, len(users))
+ 
 	for idx, user := range users {
 		ids[idx] = user.username
 	}
 
 	return ids, nil
-}
-
-func main() {
 }
