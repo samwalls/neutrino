@@ -18,11 +18,18 @@ type Session struct {
 
 type User struct {
 	username string
+	cursorPos FilePos
+	cursorSelection FileSelection
 }
 
-type CursorPos struct {
-	line string
-	column string
+type FilePos struct {
+	line int
+	column int
+}
+
+type FileSelection struct {
+	start FilePos
+	end FilePos
 }
 
 const (
@@ -32,6 +39,8 @@ const (
 var sessions= make([]Session, 0)
 
 func newSessionId() string {
+	fmt.Println()
+
 	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
     b := make([]rune, idLength)
     for i := range b {
@@ -89,7 +98,6 @@ func setSessionAtId(sessionId string, session Session) {
 	for idx, sess := range sessions {
 		if sess.id == sessionId {
 			sessions[idx] = session
-			fmt.Println("Updated session")
 			return 
 		}
 	}
@@ -119,4 +127,25 @@ func GetUsernamesForSession(sessionId string) (userIds []string, err error) {
 	}
 
 	return ids, nil
+}
+
+func SetCursorPosAndSelection(sessionId string, username string, newCursorPos FilePos, newCursorSelection FileSelection) error {
+	session, err := GetSessionById(sessionId)
+	if err != nil {
+		return err
+	}
+
+	users := session.users
+
+	for idx, user := range users {
+		if user.username == username {
+			users[idx].cursorPos = newCursorPos
+			users[idx].cursorSelection = newCursorSelection
+			session.users = users 
+			setSessionAtId(sessionId, session)
+			return nil;
+		}
+	}
+
+	return errors.New("No user found with that username in the session")
 }

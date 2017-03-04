@@ -48,3 +48,25 @@ func TestGetUserIds(t *testing.T) {
 	assert.Equal(t, usernames[0], "james", "")
 	assert.Equal(t, usernames[1], "john", "")
 } 
+
+func TestSetCursorInfo(t *testing.T) {
+	session := NewSession("james", "test.txt", "pass")
+	pos := FilePos{line: 10, column: 20}
+	sel := FileSelection{
+		start: FilePos{line: 1, column: 2},
+		end: FilePos{line: 3, column: 4},
+	}
+
+	err := SetCursorPosAndSelection(session.id, "james", pos, sel)
+	assert.Equal(t, err, nil, "")
+	session, _ = GetSessionById(session.id)
+	user := session.users[0]
+	assert.Equal(t, user.cursorPos.line, 10, "")
+	assert.Equal(t, user.cursorPos.column, 20, "")
+
+	assert.Equal(t, user.cursorSelection.start.line, 1, "")
+	assert.Equal(t, user.cursorSelection.start.column, 2, "")
+
+	assert.Equal(t, user.cursorSelection.end.line, 3, "")
+	assert.Equal(t, user.cursorSelection.end.column, 4, "")
+}
