@@ -24,17 +24,14 @@ type updateContent struct {
 	files map[string][]byte
 }
 
-func (handler *Handler) deregister(so socketio.Socket) string {
-	//TODO
-	return ""
-}
-
-func (handler *Handler) register(so socketio.Socket, msg string) string {
+func (handler *Handler) register(conn socketio.Conn, msg string) string {
 	handler.logger.Info("register fired")
 	content := registerContent{}
 	err := json.Unmarshal([]byte(msg), &content)
 	if err != nil {
-		handler.logger.Fatal(err)
+		handler.logger.WithFields(logrus.Fields{
+			"message": err.Error(),
+		}).Fatal("error when unmarshalling message from register event")
 	}
 	handler.logger.WithFields(logrus.Fields{
 		"username": content.username,
@@ -44,27 +41,22 @@ func (handler *Handler) register(so socketio.Socket, msg string) string {
 		files: content.files,
 	})
 	if err != nil {
-		handler.logger.Fatal(err)
+		handler.logger.WithFields(logrus.Fields{
+			"message": err.Error(),
+		}).Fatal("error when marshalling response to register event")
 	}
 	handler.logger.Info(response)
 	return string(response)
 }
 
-func (handler *Handler) disconnection(so socketio.Socket) {
+func (handler *Handler) disconnection(conn socketio.Conn) {
 	// Handle disconnection
 }
 
-func (handler *Handler) connection(so socketio.Socket) {
+func (handler *Handler) connection(conn socketio.Conn) error {
 	handler.logger.Info("connection established")
-	handler.logger.Infof("Socket: %v", so)
-	handler.logger.Infof("Connected clients: %v", handler.server.Count())
-	so.On("register", func(msg string) string {
-		so.Emit("polo", "HellO!")
-		handler.logger.Info("register fired!!!")
-	 	return handler.register(so, msg) 
-	})
-	so.On("deregister", func() string { return handler.deregister(so) })
-	so.On("disconnection", handler.disconnection)
+	handler.logger.Infof("socket: %v", conn.RemoteAddr())
+	return nil
 }
 
 // NewHandler creates a new Handler struct
@@ -77,10 +69,14 @@ func NewHandler(logger *logrus.Logger) (Handler, error) {
 	if err != nil {
 		return handler, err
 	}
-	server.On("connection", func (so socketio.Socket) {
-		handler.connection(so)
+	server.OnConnect("/", func(conn socketio.Conn) error {
+		return handler.connection(conn)
 	})
-	server.On("error", func(so socketio.Socket, err error) {
+	server.OnEvent("/", "register", func(conn socketio.Conn, msg string) string {
+		conn.Emit("polo", "Hello!")
+		return handler.register(conn, msg)
+	})
+	server.OnError("/", func(err error) {
 		handler.logger.Fatalf("error: %v", err)
 	})
 	return handler, nil
