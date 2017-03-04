@@ -10,26 +10,26 @@ import (
 )
 
 type Session struct {
-	users []User 
-	fileName string
-	id string
-	hashedPassword []byte
+	Users []User 
+	FileName string
+	Id string
+	HashedPassword []byte
 }
 
 type User struct {
-	username string
-	cursorPos FilePos
-	cursorSelection FileSelection
+	Username string
+	CursorPos FilePos
+	CursorSelection FileSelection
 }
 
 type FilePos struct {
-	line int
-	column int
+	Line int
+	Column int
 }
 
 type FileSelection struct {
-	start FilePos
-	end FilePos
+	Start FilePos
+	End FilePos
 }
 
 const (
@@ -59,23 +59,23 @@ func ValidPassword(sessionId string, plainPassword string) bool {
 		return false
 	}
 
-	if session.hashedPassword == nil {
+	if session.HashedPassword == nil {
 		return true // No password set for session (passwords are optional)
 	}
 
-	err = bcrypt.CompareHashAndPassword(session.hashedPassword, toByteArray(plainPassword))
+	err = bcrypt.CompareHashAndPassword(session.HashedPassword, toByteArray(plainPassword))
 	return err == nil // No error => Valid password
 }
 
 // Creates a new session
 func NewSession(createrUsername string, fileName string, plainPassword string) Session  {
-	cUser := User{username: createrUsername}
+	cUser := User{Username: createrUsername}
 	hashedPassword, _ := bcrypt.GenerateFromPassword(toByteArray(plainPassword), 5) 
 	if len(plainPassword) == 0 {
 		hashedPassword = nil
 	}
-	session := Session{fileName: fileName, id: newSessionId(), users: make([]User, 1), hashedPassword: hashedPassword}
-	session.users[0] =  cUser
+	session := Session{FileName: fileName, Id: newSessionId(),Users: make([]User, 1), HashedPassword: hashedPassword}
+	session.Users[0] =  cUser
 
 	// Add session to list of all sessions (in memory)
 	sessions = append(sessions, session)
@@ -83,20 +83,20 @@ func NewSession(createrUsername string, fileName string, plainPassword string) S
 }
 
 func AddUserToSession(sessionId string, username string) (u User, e error) {
-	user := User{username: username}
+	user := User{Username: username}
 	session, err := GetSessionById(sessionId)
 	if err != nil {
 		return u, errors.New("Failed to find session with id")
 	}
 
-	session.users = append(session.users, user)
+	session.Users = append(session.Users, user)
 	setSessionAtId(sessionId, session)
 	return user, nil
 }
 
 func setSessionAtId(sessionId string, session Session) {
 	for idx, sess := range sessions {
-		if sess.id == sessionId {
+		if sess.Id == sessionId {
 			sessions[idx] = session
 			return 
 		}
@@ -105,7 +105,7 @@ func setSessionAtId(sessionId string, session Session) {
 
 func GetSessionById(id string) (s Session, err error) {
 	for _, session := range sessions {
-		if session.id == id {
+		if session.Id == id {
 			return session, nil
 		} 
 	}   
@@ -119,11 +119,11 @@ func GetUsernamesForSession(sessionId string) (userIds []string, err error) {
 		return userIds, err
 	}
 
-	users := session.users
+	users := session.Users
 	ids := make([]string, len(users))
  
 	for idx, user := range users {
-		ids[idx] = user.username
+		ids[idx] = user.Username
 	}
 
 	return ids, nil
@@ -135,13 +135,13 @@ func SetCursorPosAndSelection(sessionId string, username string, newCursorPos Fi
 		return err
 	}
 
-	users := session.users
+	users := session.Users
 
 	for idx, user := range users {
-		if user.username == username {
-			users[idx].cursorPos = newCursorPos
-			users[idx].cursorSelection = newCursorSelection
-			session.users = users 
+		if user.Username == username {
+			users[idx].CursorPos = newCursorPos
+			users[idx].CursorSelection = newCursorSelection
+			session.Users = users 
 			setSessionAtId(sessionId, session)
 			return nil;
 		}
