@@ -42,6 +42,9 @@ func NewSession(createrUsername string, fileName string, initialFileData string)
 	cUser := User{username: createrUsername}
 	session := Session{fileName: fileName, id: newSessionId(), users: make([]User, 1)}
 	session.users[0] =  cUser
+
+	// Add session to list of all sessions (in memory)
+	sessions = append(sessions, session)
 	return session
 }
 
