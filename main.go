@@ -7,6 +7,9 @@ import (
 
 func main() {
 	logger := logrus.New()
-	handler := handle.NewHandler(logger)
+	handler, err := handle.NewHandler(logger)
+	if err != nil {
+		logger.Fatal(err)
+	}
 	handler.Serve("/", 8000)
 }

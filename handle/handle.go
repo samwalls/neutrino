@@ -69,6 +69,6 @@ func (handler *Handler) Serve(root string, port uint) error {
 		"location": "localhost",
 		"port":     port,
 	}).Info()
-	http.Handle(fmt.Sprintf("%v:%v", root, port), handler.server)
-	return nil
+	http.Handle(fmt.Sprintf("/socket.io/%v:%v", root, port), handler.server)
+	return http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
 }
