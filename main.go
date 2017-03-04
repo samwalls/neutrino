@@ -1,28 +1,15 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"net/http"
-
-	log "github.com/Sirupsen/logrus"
-	ws "github.com/gorilla/websocket"
+	"github.com/Sirupsen/logrus"
+	"github.com/samwalls/neutrino/handle"
 )
 
-var addr = flag.String("addr", ":8000", "http service address")
-
-func serve(w http.ResponseWriter, r *http.Request) {
-	log.WithFields(log.Fields{
-		"client": r.Host,
-	}).Info("client connected")
-}
-
 func main() {
-	fmt.Println(ws.BinaryMessage)
-	http.HandleFunc("/", serve)
-	err := http.ListenAndServe(*addr, nil)
+	logger := logrus.New()
+	handler, err := handle.NewHandler(logger)
 	if err != nil {
-		log.SetLevel(log.FatalLevel)
-		log.Fatalln("error accepting client")
+		logger.Fatal(err)
 	}
+	handler.Serve("/", 8000)
 }
