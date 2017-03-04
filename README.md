@@ -1,7 +1,4 @@
 # Neutrino
 Backend for Atom plugin.
 
-## Dependencies
-```
-(must be 1.4) github.com/googollee/go-socket.io
-```
+Moved to a [JS project](https://github.com/AdamHirst/neutrino) JS project (combined with front end)
