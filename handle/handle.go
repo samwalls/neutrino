@@ -29,6 +29,7 @@ func (handler *Handler) deregister(so socketio.Socket) {
 }
 
 func (handler *Handler) register(msg string, so socketio.Socket) {
+	handler.logger.Info("register fired")
 	content := registerContent{}
 	err := json.Unmarshal([]byte(msg), &content)
 	if err != nil {
@@ -37,7 +38,7 @@ func (handler *Handler) register(msg string, so socketio.Socket) {
 	handler.logger.WithFields(logrus.Fields{
 		"username": content.username,
 		"files":    content.files,
-	})
+	}).Info()
 	response, err := json.Marshal(updateContent{
 		files: content.files,
 	})
@@ -48,6 +49,12 @@ func (handler *Handler) register(msg string, so socketio.Socket) {
 	so.Emit("update", response)
 }
 
+func (handler *Handler) connection(so socketio.Socket) {
+	handler.logger.Info("connection established")
+	so.On("register", handler.register)
+	so.On("deregister", handler.deregister)
+}
+
 // NewHandler creates a new Handler struct
 func NewHandler(logger *logrus.Logger) (Handler, error) {
 	handler := Handler{}
@@ -55,8 +62,10 @@ func NewHandler(logger *logrus.Logger) (Handler, error) {
 	if err != nil {
 		return handler, err
 	}
-	server.On("register", handler.register)
-	server.On("deregister", handler.deregister)
+	server.On("connection", handler.connection)
+	server.On("error", func(so socketio.Socket, err error) {
+		handler.logger.Fatal(err)
+	})
 	return Handler{
 		server: server,
 		logger: logger,
