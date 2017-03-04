@@ -12,33 +12,33 @@ func TestTest(t *testing.T) {
 
 func TestNewSession(t *testing.T) {
 	session := NewSession("james", "test.txt", "")
-	assert.Equal(t, session.fileName, "test.txt", "")
-	users := session.users
+	assert.Equal(t, session.FileName, "test.txt", "")
+	users := session.Users
 	assert.Equal(t, len(users), 1, "")
 	user := users[0]
-	assert.Equal(t, user.username, "james", "")
+	assert.Equal(t, user.Username, "james", "")
 }
 
 func TestAuthentication(t *testing.T) {
 	session := NewSession("james", "test.txt", "pass")
-	assert.True(t, ValidPassword(session.id, "pass"))
-	assert.False(t, ValidPassword(session.id, "pass2"))
-	assert.False(t, ValidPassword(session.id, ""))
+	assert.True(t, ValidPassword(session.Id, "pass"))
+	assert.False(t, ValidPassword(session.Id, "pass2"))
+	assert.False(t, ValidPassword(session.Id, ""))
 }
 
 func TestGetSessionId(t *testing.T) {
 	session := NewSession("james", "test.txt", "pass")
 	_ = NewSession("james", "sdfljhdskfjh", "pass")
-	s2, _ := GetSessionById(session.id)
-	assert.Equal(t, s2.fileName, "test.txt", "")
+	s2, _ := GetSessionById(session.Id)
+	assert.Equal(t, s2.FileName, "test.txt", "")
 }
 
 
 func TestGetUserIds(t *testing.T) {
 	session := NewSession("james", "test.txt", "pass")
-	sessionId := session.id
+	sessionId := session.Id
 
-	assert.Equal(t, len(session.users), 1, "")
+	assert.Equal(t, len(session.Users), 1, "")
 	AddUserToSession(sessionId, "john")
 
 	usernames, _ := GetUsernamesForSession(sessionId)
@@ -51,22 +51,22 @@ func TestGetUserIds(t *testing.T) {
 
 func TestSetCursorInfo(t *testing.T) {
 	session := NewSession("james", "test.txt", "pass")
-	pos := FilePos{line: 10, column: 20}
+	pos := FilePos{Line: 10, Column: 20}
 	sel := FileSelection{
-		start: FilePos{line: 1, column: 2},
-		end: FilePos{line: 3, column: 4},
+		Start: FilePos{Line: 1, Column: 2},
+		End: FilePos{Line: 3, Column: 4},
 	}
 
-	err := SetCursorPosAndSelection(session.id, "james", pos, sel)
+	err := SetCursorPosAndSelection(session.Id, "james", pos, sel)
 	assert.Equal(t, err, nil, "")
-	session, _ = GetSessionById(session.id)
-	user := session.users[0]
-	assert.Equal(t, user.cursorPos.line, 10, "")
-	assert.Equal(t, user.cursorPos.column, 20, "")
+	session, _ = GetSessionById(session.Id)
+	user := session.Users[0]
+	assert.Equal(t, user.CursorPos.Line, 10, "")
+	assert.Equal(t, user.CursorPos.Column, 20, "")
 
-	assert.Equal(t, user.cursorSelection.start.line, 1, "")
-	assert.Equal(t, user.cursorSelection.start.column, 2, "")
+	assert.Equal(t, user.CursorSelection.Start.Line, 1, "")
+	assert.Equal(t, user.CursorSelection.Start.Column, 2, "")
 
-	assert.Equal(t, user.cursorSelection.end.line, 3, "")
-	assert.Equal(t, user.cursorSelection.end.column, 4, "")
+	assert.Equal(t, user.CursorSelection.End.Line, 3, "")
+	assert.Equal(t, user.CursorSelection.End.Column, 4, "")
 }
