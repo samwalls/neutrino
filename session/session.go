@@ -5,12 +5,14 @@ package main
 import (
     "math/rand"
     "errors"
+    "golang.org/x/crypto/bcrypt"
 )
 
 type Session struct {
 	users []User 
 	fileName string
 	id string
+	hashedPassword []byte
 }
 
 type User struct {
@@ -37,10 +39,32 @@ func newSessionId() string {
     return string(b)
 }
 
+func toByteArray(str string) []byte {
+	return []byte(str)
+}
+
+func ValidPassword(sessionId string, plainPassword string) bool {
+	session, err := GetSessionById(sessionId)
+	if err != nil {
+		return false
+	}
+
+	if session.hashedPassword == nil {
+		return true // No password set for session (passwords are optional)
+	}
+
+	err = bcrypt.CompareHashAndPassword(session.hashedPassword, toByteArray(plainPassword))
+	return err == nil // No error => Valid password
+}
+
 // Creates a new session
-func NewSession(createrUsername string, fileName string, initialFileData string) Session  {
+func NewSession(createrUsername string, fileName string, initialFileData string, plainPassword string) Session  {
 	cUser := User{username: createrUsername}
-	session := Session{fileName: fileName, id: newSessionId(), users: make([]User, 1)}
+	hashedPassword, _ := bcrypt.GenerateFromPassword(toByteArray(plainPassword), 5) 
+	if len(plainPassword) == 0 {
+		hashedPassword = nil
+	}
+	session := Session{fileName: fileName, id: newSessionId(), users: make([]User, 1), hashedPassword: hashedPassword}
 	session.users[0] =  cUser
 
 	// Add session to list of all sessions (in memory)
