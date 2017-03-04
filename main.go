@@ -11,5 +11,5 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-	handler.Serve("/", 8000)
+	handler.Serve("8000")
 }

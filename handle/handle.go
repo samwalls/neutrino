@@ -64,11 +64,11 @@ func NewHandler(logger *logrus.Logger) (Handler, error) {
 }
 
 // Serve starts handling requests
-func (handler *Handler) Serve(root string, port uint) error {
+func (handler *Handler) Serve(port string) {
 	handler.logger.WithFields(logrus.Fields{
 		"location": "localhost",
 		"port":     port,
 	}).Info()
-	http.Handle(fmt.Sprintf("/socket.io/%v:%v", root, port), handler.server)
-	return http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
+	http.Handle("/socket.io/", handler.server)
+	handler.logger.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
 }
