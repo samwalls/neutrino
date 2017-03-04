@@ -29,7 +29,9 @@ func (handler *Handler) register(conn socketio.Conn, msg string) string {
 	content := registerContent{}
 	err := json.Unmarshal([]byte(msg), &content)
 	if err != nil {
-		handler.logger.Fatal(err)
+		handler.logger.WithFields(logrus.Fields{
+			"message": err.Error(),
+		}).Fatal("error when unmarshalling message from register event")
 	}
 	handler.logger.WithFields(logrus.Fields{
 		"username": content.username,
@@ -39,7 +41,9 @@ func (handler *Handler) register(conn socketio.Conn, msg string) string {
 		files: content.files,
 	})
 	if err != nil {
-		handler.logger.Fatal(err)
+		handler.logger.WithFields(logrus.Fields{
+			"message": err.Error(),
+		}).Fatal("error when marshalling response to register event")
 	}
 	handler.logger.Info(response)
 	return string(response)
